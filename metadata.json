@@ -1,0 +1,7 @@
+{
+  "name": "Number Grid",
+  "description": "A soft grid displaying numbers 1 to 30 inside circular elements.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

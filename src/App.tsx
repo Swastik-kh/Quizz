@@ -3,15 +3,66 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { questions } from './questions';
+import { Settings as SettingsIcon } from 'lucide-react';
+import { questions as defaultQuestions, CaseData } from './questions';
+import { db, auth } from './firebase';
+import { GoogleAuthProvider, signInWithPopup, onAuthStateChanged, User } from 'firebase/auth';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { Settings } from './components/Settings';
 
 export default function App() {
   const [lockedNumbers, setLockedNumbers] = useState<number[]>([]);
+  const [customQuestions, setCustomQuestions] = useState<{ [key: number]: CaseData }>({});
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
   const [viewingQuestionId, setViewingQuestionId] = useState<number | null>(null);
   const [showAnswer, setShowAnswer] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  const questions = { ...defaultQuestions, ...customQuestions };
+
+  useEffect(() => {
+    return onAuthStateChanged(auth, (user) => {
+      setUser(user);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      const docRef = doc(db, 'appState', user.uid);
+      return onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setLockedNumbers(data.lockedNumbers || []);
+          setCustomQuestions(data.customQuestions || {});
+        } else {
+          // Initialize if it doesn't exist
+          setDoc(docRef, { lockedNumbers: [], customQuestions: {} });
+        }
+      });
+    } else {
+      setLockedNumbers([]);
+      setCustomQuestions({});
+    }
+  }, [user]);
+
+  const updateLockedNumbers = async (newLockedNumbers: number[]) => {
+    if (user) {
+      const docRef = doc(db, 'appState', user.uid);
+      await setDoc(docRef, { lockedNumbers: newLockedNumbers, customQuestions }, { merge: true });
+    }
+    setLockedNumbers(newLockedNumbers);
+  };
+
+  const updateCustomQuestions = async (newQuestions: { [key: number]: CaseData }) => {
+    if (user) {
+      const docRef = doc(db, 'appState', user.uid);
+      await setDoc(docRef, { lockedNumbers, customQuestions: newQuestions }, { merge: true });
+    }
+    setCustomQuestions(newQuestions);
+  };
 
   // Question view
   if (viewingQuestionId !== null) {
@@ -76,7 +127,7 @@ export default function App() {
 
   const handleLockClick = () => {
     if (selectedNumber !== null) {
-      setLockedNumbers([...lockedNumbers, selectedNumber]);
+      updateLockedNumbers([...lockedNumbers, selectedNumber]);
       setViewingQuestionId(selectedNumber);
       setSelectedNumber(null);
     }
@@ -84,7 +135,19 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#FAF9F6] p-8 md:p-12 font-sans">
+      <Settings
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        customQuestions={customQuestions}
+        onUpdateQuestions={updateCustomQuestions}
+      />
       <div className="max-w-4xl mx-auto">
+        <button
+          onClick={() => setSettingsOpen(true)}
+          className="absolute top-4 right-4 p-2 text-neutral-400 hover:text-neutral-600"
+        >
+          <SettingsIcon />
+        </button>
         <h1 className="text-3xl font-light text-neutral-700 mb-10 text-center tracking-tight">
           कुनै एउटा नम्बर छान्नुहोस्
         </h1>
@@ -114,7 +177,7 @@ export default function App() {
           {lockedNumbers.length > 0 && (
             <button
               onClick={() => {
-                setLockedNumbers([]);
+                updateLockedNumbers([]);
                 setSelectedNumber(null);
               }}
               className="px-8 py-3 bg-red-600 text-white rounded-full font-medium shadow-lg hover:bg-red-700 transition"

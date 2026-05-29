@@ -1,0 +1,28 @@
+{
+  "entities": {
+    "appState": {
+      "title": "Application State",
+      "description": "Stores application state for a user.",
+      "type": "object",
+      "properties": {
+        "lockedNumbers": {
+          "type": "array",
+          "description": "List of locked numbers.",
+          "items": { "type": "number" }
+        },
+        "customQuestions": {
+          "type": "object",
+          "description": "User specific question configuration.",
+          "additionalProperties": { "type": "object" }
+        }
+      },
+      "required": ["lockedNumbers"]
+    }
+  },
+  "firestore": {
+    "appState/{userId}": {
+      "schema": "appState",
+      "description": "User specific application state"
+    }
+  }
+}

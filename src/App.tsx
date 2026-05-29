@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { motion } from 'motion/react';
 import { questions } from './questions';
 
 export default function App() {
@@ -15,7 +16,12 @@ export default function App() {
   // Question view
   if (viewingQuestionId !== null) {
     return (
-      <div className="min-h-screen bg-[#FAF9F6] p-8 md:p-12 font-sans">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="min-h-screen bg-[#FAF9F6] p-8 md:p-12 font-sans"
+      >
         <div className="max-w-4xl mx-auto p-8 bg-white rounded-2xl shadow-sm border border-neutral-100">
           <button
             onClick={() => {
@@ -53,7 +59,7 @@ export default function App() {
               </>
             )}
         </div>
-      </div>
+      </motion.div>
     );
   }
 

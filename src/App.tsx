@@ -18,7 +18,6 @@ export default function App() {
         <div className="max-w-4xl mx-auto p-8 bg-white rounded-2xl shadow-sm border border-neutral-100">
           <button
             onClick={() => {
-              setLockedNumber(null);
               setSelectedNumber(null);
               setShowAnswer(false);
             }}
@@ -60,12 +59,15 @@ export default function App() {
   const numbers = Array.from({ length: 30 }, (_, i) => i + 1);
 
   const handleCircleClick = (num: number) => {
-    setSelectedNumber(num);
+    if (lockedNumber === null) {
+      setSelectedNumber(num);
+    }
   };
 
   const handleLockClick = () => {
     if (selectedNumber !== null) {
       setLockedNumber(selectedNumber);
+      setSelectedNumber(null);
     }
   };
 
@@ -89,13 +91,25 @@ export default function App() {
           ))}
         </div>
 
-        <div className="mt-12 flex justify-center">
-          <button
-            onClick={handleLockClick}
-            className="px-8 py-3 bg-neutral-800 text-white rounded-full font-medium shadow-lg hover:bg-neutral-900 transition"
-          >
-            Lock
-          </button>
+        <div className="mt-12 flex justify-center gap-4">
+          {lockedNumber !== null ? (
+            <button
+              onClick={() => {
+                setLockedNumber(null);
+                setSelectedNumber(null);
+              }}
+              className="px-8 py-3 bg-red-600 text-white rounded-full font-medium shadow-lg hover:bg-red-700 transition"
+            >
+              Reset
+            </button>
+          ) : selectedNumber !== null ? (
+            <button
+              onClick={handleLockClick}
+              className="px-8 py-3 bg-neutral-800 text-white rounded-full font-medium shadow-lg hover:bg-neutral-900 transition"
+            >
+              Lock
+            </button>
+          ) : null}
         </div>
       </div>
     </div>

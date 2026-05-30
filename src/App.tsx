@@ -7,8 +7,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Settings as SettingsIcon } from 'lucide-react';
 import { questions as defaultQuestions, CaseData } from './questions';
-import { db, auth } from './firebase';
-import { GoogleAuthProvider, signInWithPopup, onAuthStateChanged, User } from 'firebase/auth';
+import { db } from './firebase';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { Settings } from './components/Settings';
 
@@ -19,53 +18,41 @@ export default function App() {
   const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
   const [viewingQuestionId, setViewingQuestionId] = useState<number | null>(null);
   const [showAnswer, setShowAnswer] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
 
   const questions = { ...defaultQuestions, ...customQuestions };
 
   useEffect(() => {
-    return onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const docRef = doc(db, 'appState', 'global');
+    return onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setLockedNumbers(data.lockedNumbers || []);
+        setCustomQuestions(data.customQuestions || {});
+      } else {
+        // Initialize if it doesn't exist
+        setDoc(docRef, { lockedNumbers: [], customQuestions: {} });
+      }
     });
   }, []);
 
-  useEffect(() => {
-    if (user) {
-      const docRef = doc(db, 'appState', user.uid);
-      return onSnapshot(docRef, (docSnap) => {
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setLockedNumbers(data.lockedNumbers || []);
-          setCustomQuestions(data.customQuestions || {});
-        } else {
-          // Initialize if it doesn't exist
-          setDoc(docRef, { lockedNumbers: [], customQuestions: {} });
-        }
-      });
-    } else {
-      setLockedNumbers([]);
-      setCustomQuestions({});
-    }
-  }, [user]);
-
   const updateLockedNumbers = async (newLockedNumbers: number[]) => {
-    if (user) {
-      const docRef = doc(db, 'appState', user.uid);
+    const docRef = doc(db, 'appState', 'global');
+    try {
       await setDoc(docRef, { lockedNumbers: newLockedNumbers, customQuestions }, { merge: true });
+    } catch (error) {
+      console.error('Error updating locked numbers:', error);
     }
     setLockedNumbers(newLockedNumbers);
   };
 
   const updateCustomQuestions = async (newQuestions: { [key: number]: CaseData }) => {
     console.log('updateCustomQuestions', newQuestions);
-    if (user) {
-      const docRef = doc(db, 'appState', user.uid);
-      try {
-        await setDoc(docRef, { lockedNumbers, customQuestions: newQuestions }, { merge: true });
-        console.log('Successfully updated customQuestions');
-      } catch (error) {
-        console.error('Error updating customQuestions:', error);
-      }
+    const docRef = doc(db, 'appState', 'global');
+    try {
+      await setDoc(docRef, { lockedNumbers, customQuestions: newQuestions }, { merge: true });
+      console.log('Successfully updated customQuestions');
+    } catch (error) {
+      console.error('Error updating customQuestions:', error);
     }
     setCustomQuestions(newQuestions);
   };
@@ -146,7 +133,6 @@ export default function App() {
         onClose={() => setSettingsOpen(false)}
         customQuestions={customQuestions}
         onUpdateQuestions={updateCustomQuestions}
-        user={user}
       />
       <div className="max-w-4xl mx-auto">
         <button

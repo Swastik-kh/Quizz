@@ -1,6 +1,6 @@
 {
-  "name": "Number Grid",
-  "description": "A soft grid displaying numbers 1 to 30 inside circular elements.",
+  "name": "Quiz for all",
+  "description": "An interactive Quiz app with a customizable 30-case grid, real-time sync, and administrative controls.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

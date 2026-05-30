@@ -2,22 +2,14 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isSignedIn() { return request.auth != null; }
-    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
-
-    function isValidAppState(data) {
-      return data.lockedNumbers is list && data.lockedNumbers.size() <= 30 && (data.customQuestions == null || data.customQuestions is map);
+    // Allow public read and write access to modern appState for instant global syncing
+    match /appState/{document} {
+      allow read, write: if true;
     }
 
     // Default-deny
     match /{document=**} {
       allow read, write: if false;
-    }
-
-    match /appState/{userId} {
-      allow read: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidAppState(request.resource.data);
-      allow update: if isOwner(userId) && isValidAppState(request.resource.data);
     }
   }
 }

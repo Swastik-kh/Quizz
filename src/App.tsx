@@ -18,6 +18,7 @@ export default function App() {
   const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
   const [viewingQuestionId, setViewingQuestionId] = useState<number | null>(null);
   const [showAnswer, setShowAnswer] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const questions = { ...defaultQuestions, ...customQuestions };
 
@@ -32,6 +33,10 @@ export default function App() {
         // Initialize if it doesn't exist
         setDoc(docRef, { lockedNumbers: [], customQuestions: {} });
       }
+      setLoading(false);
+    }, (error) => {
+      console.error("Firestore loading error:", error);
+      setLoading(false);
     });
   }, []);
 
@@ -56,6 +61,18 @@ export default function App() {
     }
     setCustomQuestions(newQuestions);
   };
+
+  // Loading view
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#FAF9F6] flex flex-col items-center justify-center font-sans">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-neutral-200 border-t-neutral-800 rounded-full animate-spin"></div>
+          <p className="text-neutral-500 font-medium text-lg">लोड हुँदैछ...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Question view
   if (viewingQuestionId !== null) {

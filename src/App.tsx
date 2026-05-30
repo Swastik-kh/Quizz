@@ -57,9 +57,15 @@ export default function App() {
   };
 
   const updateCustomQuestions = async (newQuestions: { [key: number]: CaseData }) => {
+    console.log('updateCustomQuestions', newQuestions);
     if (user) {
       const docRef = doc(db, 'appState', user.uid);
-      await setDoc(docRef, { lockedNumbers, customQuestions: newQuestions }, { merge: true });
+      try {
+        await setDoc(docRef, { lockedNumbers, customQuestions: newQuestions }, { merge: true });
+        console.log('Successfully updated customQuestions');
+      } catch (error) {
+        console.error('Error updating customQuestions:', error);
+      }
     }
     setCustomQuestions(newQuestions);
   };
@@ -140,6 +146,7 @@ export default function App() {
         onClose={() => setSettingsOpen(false)}
         customQuestions={customQuestions}
         onUpdateQuestions={updateCustomQuestions}
+        user={user}
       />
       <div className="max-w-4xl mx-auto">
         <button

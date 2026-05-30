@@ -13,7 +13,7 @@ export const questions: { [key: number]: CaseData } = {
   2: {
     description: "सृष्टि, उमेर 12 दिन, तौल 2.4 केजी। बच्चाको नाभीबाट पिप बगिरहेको छ। नाभी वरिपरि रातोपन छ तर पेटसम्म फैलिएको छैन। बच्चा सामान्य स्तनपान गरिरहेको छ।",
     questions: ["Classification के हुन्छ ?", "Local bacterial infection हो कि होइन ?", "कुन औषधि दिने ?", "Follow up कहिले गर्ने ?"],
-    answers: ["Local bacterial infection", "हो", "Gentian violet or Ciprofloxacin ear/eye/umbilical ointment", "२ दिनमा"]
+    answers: ["Local bacterial infection", "हो", "Gentian violet", "२ दिनमा"]
   },
   3: {
     description: "आयुष, उमेर 20 दिन, तौल 2.7 केजी। बच्चाको सास 74/min छ। छाती भित्र तानिएको छ। बच्चाले दूध खान मानेको छैन।",
@@ -57,8 +57,8 @@ export const questions: { [key: number]: CaseData } = {
   },
   11: {
     description: "कविता, उमेर 6 दिन, तौल 2 केजी। बच्चा सुस्त छ। नाभीको रातोपन पेटको छालासम्म फैलिएको छ। बच्चालाई ज्वरो छ।",
-    questions: ["Classification के हुन्छ ?", "Severe umbilical infection हो कि होइन ?", "तुरुन्त Management के गर्ने ?", "Referral किन गर्ने ?"],
-    answers: ["Severe umbilical infection", "हो", "Gentamicin and Ampicillin", "Referral"]
+    questions: ["Classification के हुन्छ ?", "PSBI हो कि होइन ?", "तुरुन्त Management के गर्ने ?", "Referral किन गर्ने ?"],
+    answers: ["Possible serious bacterial infection (PSBI)", "1. PSBI", "Gentamicin and Ampicillin", "Referral"]
   },
   12: {
     description: "अञ्जली, उमेर 28 दिन, तौल 3 केजी। बच्चालाई झाडापखाला छ तर आँखा सामान्य छन्। छाला तानेपछि तुरुन्त फर्किन्छ। बच्चा राम्रोसँग दूध खान्छ।",

@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { X, Settings as SettingsIcon } from 'lucide-react';
+import { X, Settings as SettingsIcon, LogIn } from 'lucide-react';
 import { questions as defaultQuestions, CaseData } from '../questions';
+import { auth } from '../firebase';
+import { GoogleAuthProvider, signInWithPopup, User } from 'firebase/auth';
 
 interface SettingsProps {
   isOpen: boolean;
   onClose: () => void;
   customQuestions: { [key: number]: CaseData };
   onUpdateQuestions: (newQuestions: { [key: number]: CaseData }) => void;
+  user: User | null;
 }
 
-export function Settings({ isOpen, onClose, customQuestions, onUpdateQuestions }: SettingsProps) {
+export function Settings({ isOpen, onClose, customQuestions, onUpdateQuestions, user }: SettingsProps) {
   const [activeCase, setActiveCase] = useState<number>(1);
   const [draftQuestions, setDraftQuestions] = useState(customQuestions);
 
@@ -32,6 +35,10 @@ export function Settings({ isOpen, onClose, customQuestions, onUpdateQuestions }
   const handleUpdate = () => {
     onUpdateQuestions(draftQuestions);
     onClose();
+  };
+
+  const handleSignIn = () => {
+    signInWithPopup(auth, new GoogleAuthProvider());
   };
 
   return (
@@ -100,13 +107,22 @@ export function Settings({ isOpen, onClose, customQuestions, onUpdateQuestions }
             </div>
           </div>
         </div>
-        <div className="p-6 border-t border-neutral-100 flex justify-end">
-            <button 
-                onClick={handleUpdate}
-                className="px-6 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 transition"
-            >
-                अपडेट गर्नुहोस्
-            </button>
+        <div className="p-6 border-t border-neutral-100 flex justify-end gap-2">
+            {!user ? (
+                <button 
+                    onClick={handleSignIn}
+                    className="flex items-center gap-2 px-6 py-2 bg-neutral-600 text-white rounded-lg hover:bg-neutral-700 transition"
+                >
+                    <LogIn size={18} /> प्रवेश गर्नुहोस्
+                </button>
+            ) : (
+                <button 
+                    onClick={handleUpdate}
+                    className="px-6 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-900 transition"
+                >
+                    अपडेट गर्नुहोस्
+                </button>
+            )}
         </div>
       </motion.div>
     </motion.div>

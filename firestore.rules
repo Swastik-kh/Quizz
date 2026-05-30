@@ -17,7 +17,7 @@ service cloud.firestore {
     match /appState/{userId} {
       allow read: if isOwner(userId);
       allow create: if isOwner(userId) && isValidAppState(request.resource.data);
-      allow update: if isOwner(userId) && isValidAppState(request.resource.data) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lockedNumbers', 'customQuestions']);
+      allow update: if isOwner(userId) && isValidAppState(request.resource.data);
     }
   }
 }

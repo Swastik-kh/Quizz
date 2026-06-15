@@ -1,14 +1,30 @@
-export interface CaseData {
-  description: string;
-  questions: string[];
-  answers: string[];
-}
+import { CaseData } from './types';
 
 export const questions: { [key: number]: CaseData } = {
   1: {
     description: "रमेश, उमेर 5 दिन, तौल 2.2 केजी। आमाले बच्चाले राम्रोसँग दूध नचुस्ने बताइन्। बच्चाको सास 68/min छ। बच्चा सुस्त छ र ज्वरो 38°C छ।",
-    questions: ["यो बच्चाको Classification के हुन्छ ?", "कुन danger signs छन् ?", "पहिलो dose कुन antibiotic दिने ?", "Management र referral कसरी गर्ने ?"],
-    answers: ["Possible serious bacterial infection", "सुस्त, ज्वरो, सास छिटो", "Gentamicin and Ampicillin", "Referral र व्यवस्थापन"]
+    questions: [
+      {
+        text: "यो बच्चाको Classification के हुन्छ ?",
+        options: ["Possible serious bacterial infection", "Severe pneumonia", "No jaundice", "Local bacterial infection"],
+        correctAnswerIndex: 0
+      },
+      {
+        text: "कुन danger signs छन् ?",
+        options: ["सास छिटो", "सुस्त, ज्वरो, सास छिटो", "सुस्त", "सामान्य"],
+        correctAnswerIndex: 1
+      },
+      {
+        text: "पहिलो dose कुन antibiotic दिने ?",
+        options: ["Amoxicillin", "Gentamicin and Ampicillin", "Ciprofloxacin", "Gentian violet"],
+        correctAnswerIndex: 1
+      },
+      {
+        text: "Management र referral कसरी गर्ने ?",
+        options: ["घरमै उपचार गर्ने", "Referral मात्र गर्ने", "Referral र व्यवस्थापन", "कुनै पनि होइन"],
+        correctAnswerIndex: 2
+      }
+    ]
   },
   2: {
     description: "सृष्टि, उमेर 12 दिन, तौल 2.4 केजी। बच्चाको नाभीबाट पिप बगिरहेको छ। नाभी वरिपरि रातोपन छ तर पेटसम्म फैलिएको छैन। बच्चा सामान्य स्तनपान गरिरहेको छ।",

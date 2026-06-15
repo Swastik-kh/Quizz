@@ -17,12 +17,44 @@
         }
       },
       "required": ["lockedNumbers"]
+    },
+    "case": {
+      "title": "Case",
+      "description": "Case study",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "required": ["title", "description"]
+    },
+    "question": {
+      "title": "Question",
+      "description": "Quiz question",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "options": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "correctAnswerIndex": { "type": "integer" }
+      },
+      "required": ["text", "options", "correctAnswerIndex"]
     }
   },
   "firestore": {
     "appState/{userId}": {
       "schema": "appState",
       "description": "User specific application state"
+    },
+    "cases/{caseId}": {
+      "schema": "case",
+      "description": "Collection of case studies"
+    },
+    "cases/{caseId}/questions/{questionId}": {
+      "schema": "question",
+      "description": "Subcollection of questions for a case"
     }
   }
 }

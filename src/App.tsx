@@ -20,6 +20,12 @@ export default function App() {
   const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
   const [viewingQuestionId, setViewingQuestionId] = useState<number | null>(null);
   const [showAnswer, setShowAnswer] = useState(false);
+  const [userSelections, setUserSelections] = useState<{ [qIndex: number]: number }>({});
+
+  useEffect(() => {
+    setUserSelections({});
+    setShowAnswer(false);
+  }, [viewingQuestionId]);
 
   const questions = { ...defaultQuestions, ...customQuestions };
 
@@ -60,46 +66,80 @@ export default function App() {
   // Question view
   if (viewingQuestionId !== null) {
     return (
-      <motion.div
+        <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="min-h-screen bg-[#FAF9F6] p-8 md:p-12 font-sans"
+        className="h-screen bg-[#FAF9F6] p-2 md:p-4 font-sans flex flex-col"
       >
-        <div className="max-w-4xl mx-auto p-8 bg-white rounded-2xl shadow-sm border border-neutral-100">
-          <button
-            onClick={() => {
-              setViewingQuestionId(null);
-              setSelectedNumber(null);
-              setShowAnswer(false);
-            }}
-            className="mb-6 px-4 py-2 bg-neutral-100 text-neutral-600 rounded-lg hover:bg-neutral-200 transition"
-          >
-            ← पछाडि
-          </button>
-          
-          <button
-            onClick={() => setShowAnswer(!showAnswer)}
-            className="mb-6 px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition"
-          >
-             {showAnswer ? 'प्रश्नहरू हेर्नुहोस्' : 'उत्तरहरू हेर्नुहोस्'}
-          </button>
+        <div className="max-w-4xl w-full mx-auto p-4 bg-white rounded-2xl shadow-sm border border-neutral-100 flex-1 flex flex-col overflow-hidden">
+          <div className="flex gap-2 mb-4">
+            <button
+              onClick={() => {
+                setViewingQuestionId(null);
+                setSelectedNumber(null);
+                setShowAnswer(false);
+              }}
+              className="px-4 py-2 bg-neutral-100 text-neutral-600 rounded-lg hover:bg-neutral-200 transition text-sm"
+            >
+              ←
+            </button>
+            
+            <button
+              onClick={() => setShowAnswer(!showAnswer)}
+              className="px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition text-sm"
+            >
+               {showAnswer ? 'Hide Answers' : 'Show Answers'}
+            </button>
+          </div>
 
-          <h2 className="text-2xl font-medium mb-6 text-neutral-800">
-            प्रश्न: नम्बर {viewingQuestionId}
+          <h2 className="text-xl font-medium mb-3 text-neutral-800">
+            Nº {viewingQuestionId}
           </h2>
           {questions[viewingQuestionId] && (
               <>
-                <p className="text-neutral-800 text-lg mb-6 p-4 bg-neutral-50 rounded-lg">
+                <p className="text-neutral-800 text-sm mb-3 p-3 bg-neutral-50 rounded-lg overflow-y-auto">
                   {questions[viewingQuestionId].description}
                 </p>
-                <ul className="space-y-4">
-                  {(showAnswer ? (questions[viewingQuestionId].answers || []) : (questions[viewingQuestionId].questions || [])).map((q, i) => (
-                    <li key={i} className="text-neutral-600 text-lg">
-                      {i + 1}. {q}
-                    </li>
-                  ))}
-                </ul>
+                <div className="space-y-3 flex-1 overflow-y-auto">
+                  {(Array.isArray(questions[viewingQuestionId].questions) && typeof questions[viewingQuestionId].questions[0] === 'object' 
+                    ? (questions[viewingQuestionId].questions as any[]).map((q, qIndex) => (
+                      <div key={qIndex} className="p-3 border rounded-lg">
+                        <p className="font-medium text-sm mb-2">{q.text}</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {q.options.map((option: string, oIndex: number) => (
+                            <button
+                              key={oIndex}
+                              onClick={() => !showAnswer && setUserSelections(prev => ({ ...prev, [qIndex]: oIndex }))}
+                              disabled={showAnswer}
+                              className={`p-1.5 border rounded text-left transition text-xs ${
+                                userSelections[qIndex] === oIndex
+                                  ? oIndex === q.correctAnswerIndex
+                                    ? 'bg-green-100 border-green-700 text-green-800' // Selected Correct
+                                    : 'bg-red-100 border-red-700 text-red-800'        // Selected Incorrect
+                                  : (showAnswer && oIndex === q.correctAnswerIndex)
+                                    ? 'bg-green-100 border-green-700 text-green-800' // Revealed Correct
+                                    : 'bg-neutral-50 hover:bg-neutral-100'
+                              }`}
+                            >
+                              {option}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))
+                    : (questions[viewingQuestionId].questions as string[]).map((q, qIndex) => (
+                      <div key={qIndex} className="p-3 border rounded-lg">
+                        <p className="font-medium text-sm mb-2">{qIndex + 1}. {q}</p>
+                        {showAnswer && (
+                          <div className="bg-green-100 border border-green-500 p-2 rounded mt-2 text-xs">
+                            {(questions[viewingQuestionId] as any).answers[qIndex]}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
               </>
             )}
         </div>

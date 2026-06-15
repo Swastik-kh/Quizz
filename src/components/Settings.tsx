@@ -162,7 +162,7 @@ export function Settings({ isOpen, onClose, customQuestions, onUpdateQuestions }
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 mb-1">प्रश्नहरू (एउटा प्रति लाइन)</label>
                   <textarea
-                    value={currentQuestions[activeCase].questions.join('\n')}
+                    value={(currentQuestions[activeCase].questions || []).join('\n')}
                     onChange={(e) => updateCase({ questions: e.target.value.split('\n') })}
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-neutral-700 focus:outline-none"
                     rows={4}
@@ -172,7 +172,7 @@ export function Settings({ isOpen, onClose, customQuestions, onUpdateQuestions }
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 mb-1">उत्तरहरू (एउटा प्रति लाइन)</label>
                   <textarea
-                    value={currentQuestions[activeCase].answers.join('\n')}
+                    value={(currentQuestions[activeCase].answers || []).join('\n')}
                     onChange={(e) => updateCase({ answers: e.target.value.split('\n') })}
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-neutral-700 focus:outline-none"
                     rows={4}

@@ -5,20 +5,21 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Settings as SettingsIcon } from 'lucide-react';
+import { Settings as SettingsIcon, Sparkles } from 'lucide-react';
 import { questions as defaultQuestions, CaseData } from './questions';
 import { db } from './firebase';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { Settings } from './components/Settings';
+import { SpinWheel } from './components/SpinWheel';
 
 export default function App() {
   const [lockedNumbers, setLockedNumbers] = useState<number[]>([]);
   const [customQuestions, setCustomQuestions] = useState<{ [key: number]: CaseData }>({});
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [spinWheelOpen, setSpinWheelOpen] = useState(false);
   const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
   const [viewingQuestionId, setViewingQuestionId] = useState<number | null>(null);
   const [showAnswer, setShowAnswer] = useState(false);
-  const [loading, setLoading] = useState(true);
 
   const questions = { ...defaultQuestions, ...customQuestions };
 
@@ -30,49 +31,31 @@ export default function App() {
         setLockedNumbers(data.lockedNumbers || []);
         setCustomQuestions(data.customQuestions || {});
       } else {
-        // Initialize if it doesn't exist
-        setDoc(docRef, { lockedNumbers: [], customQuestions: {} });
+        setLockedNumbers([]);
+        setCustomQuestions({});
       }
-      setLoading(false);
-    }, (error) => {
-      console.error("Firestore loading error:", error);
-      setLoading(false);
     });
   }, []);
 
   const updateLockedNumbers = async (newLockedNumbers: number[]) => {
     const docRef = doc(db, 'appState', 'global');
     try {
-      await setDoc(docRef, { lockedNumbers: newLockedNumbers, customQuestions }, { merge: true });
+      await setDoc(docRef, { lockedNumbers: newLockedNumbers }, { merge: true });
     } catch (error) {
       console.error('Error updating locked numbers:', error);
     }
-    setLockedNumbers(newLockedNumbers);
   };
 
   const updateCustomQuestions = async (newQuestions: { [key: number]: CaseData }) => {
     console.log('updateCustomQuestions', newQuestions);
     const docRef = doc(db, 'appState', 'global');
     try {
-      await setDoc(docRef, { lockedNumbers, customQuestions: newQuestions }, { merge: true });
+      await setDoc(docRef, { customQuestions: newQuestions }, { merge: true });
       console.log('Successfully updated customQuestions');
     } catch (error) {
       console.error('Error updating customQuestions:', error);
     }
-    setCustomQuestions(newQuestions);
   };
-
-  // Loading view
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#FAF9F6] flex flex-col items-center justify-center font-sans">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-neutral-200 border-t-neutral-800 rounded-full animate-spin"></div>
-          <p className="text-neutral-500 font-medium text-lg">लोड हुँदैछ...</p>
-        </div>
-      </div>
-    );
-  }
 
   // Question view
   if (viewingQuestionId !== null) {
@@ -111,7 +94,7 @@ export default function App() {
                   {questions[viewingQuestionId].description}
                 </p>
                 <ul className="space-y-4">
-                  {(showAnswer ? questions[viewingQuestionId].answers : questions[viewingQuestionId].questions).map((q, i) => (
+                  {(showAnswer ? (questions[viewingQuestionId].answers || []) : (questions[viewingQuestionId].questions || [])).map((q, i) => (
                     <li key={i} className="text-neutral-600 text-lg">
                       {i + 1}. {q}
                     </li>
@@ -151,12 +134,27 @@ export default function App() {
         customQuestions={customQuestions}
         onUpdateQuestions={updateCustomQuestions}
       />
+      <SpinWheel
+        isOpen={spinWheelOpen}
+        onClose={() => setSpinWheelOpen(false)}
+        lockedNumbers={lockedNumbers}
+        onNumberSelected={(num) => {
+          updateLockedNumbers([...lockedNumbers, num]);
+          setViewingQuestionId(num);
+        }}
+      />
       <div className="max-w-4xl mx-auto">
         <button
           onClick={() => setSettingsOpen(true)}
           className="absolute top-4 right-4 p-2 text-neutral-400 hover:text-neutral-600"
         >
           <SettingsIcon />
+        </button>
+        <button
+          onClick={() => setSpinWheelOpen(true)}
+          className="absolute top-4 left-4 p-2 text-neutral-400 hover:text-neutral-600 flex items-center gap-1"
+        >
+          <Sparkles size={20} /> Spin
         </button>
         <h1 className="text-3xl font-light text-neutral-700 mb-10 text-center tracking-tight">
           कुनै एउटा नम्बर छान्नुहोस्

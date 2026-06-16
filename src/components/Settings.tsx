@@ -1,7 +1,8 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { motion } from 'motion/react';
 import { X, Settings as SettingsIcon, ShieldAlert } from 'lucide-react';
-import { questions as defaultQuestions, CaseData } from '../questions';
+import { questions as defaultQuestions } from '../questions';
+import { CaseData } from '../types';
 
 interface SettingsProps {
   isOpen: boolean;

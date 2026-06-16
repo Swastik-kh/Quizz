@@ -657,24 +657,24 @@ export default function App() {
           ) : lockedNumbers.length < 20 ? (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
               <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-                <span className="text-xs font-extrabold text-blue-700 tracking-wide uppercase">चरण २: स्पिन छनौट</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse"></span>
+                <span className="text-xs font-extrabold text-blue-700 tracking-wide uppercase">चरण २: स्पिन भाग्यशाली छनौट</span>
               </div>
               <div className="text-[11px] text-neutral-500 font-medium font-sans">
-                स्पिन ह्विल (Spin Button) प्रयोग गरी भाग्यशाली प्रश्न छान्नुहोस्।
+                स्पिन बटन थिची भाग्यशाली नम्बर मार्फत प्रश्न खेल्नुहोस्।
               </div>
               <div className="text-[10px] text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded-full font-mono font-bold">
-                प्रश्न: {lockedNumbers.length - 10}/१०
+                प्रश्न: {lockedNumbers.length}/१०+
               </div>
             </div>
           ) : (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
               <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
-                <span className="text-xs font-extrabold text-purple-700 tracking-wide uppercase">चरण ३: द्रुत राउन्ड (Rapid)</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-purple-500 animate-pulse"></span>
+                <span className="text-xs font-extrabold text-purple-700 tracking-wide uppercase">चरण ३: र्‍यापिड मोड</span>
               </div>
               <div className="text-[11px] text-neutral-500 font-medium font-sans">
-                द्रुत समय सीमा भित्र र्‍यापिड मोडमा मात्र प्रश्नहरू खोल्न मिल्नेछ।
+                द्रुत राउन्डको समय सीमा भित्र प्रश्नको उत्तर दिनुहोस्।
               </div>
               <div className="text-[10px] text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded-full font-mono font-bold">
                 प्रश्न: {lockedNumbers.length - 20}/१०+
@@ -683,13 +683,15 @@ export default function App() {
           )}
         </div>
 
-        <h1 className="text-3xl font-light text-neutral-700 mb-10 text-center tracking-tight">
+        {/* Title and Numbers Grid */}
+        <h1 className="text-3xl font-light text-neutral-700 mb-10 text-center tracking-tight pt-4">
           कुनै एउटा नम्बर छान्नुहोस्
         </h1>
         <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 gap-6 justify-items-center">
           {numbers.map((num) => (
             <div
               key={num}
+              id={`number-circle-${num}`}
               onClick={() => handleCircleClick(num)}
               className={`w-16 h-16 rounded-full flex items-center justify-center text-white text-lg font-medium shadow-md transition-transform hover:scale-105 hover:shadow-lg cursor-pointer ${
                 (selectedNumber === num || lockedNumbers.includes(num)) ? 'bg-red-500' : 'bg-green-500'
@@ -700,24 +702,29 @@ export default function App() {
           ))}
         </div>
 
-        <div className="mt-12 flex justify-center gap-4">
+        {/* Action buttons (Lock and reset) */}
+        <div className="mt-12 flex justify-center gap-4 pb-8">
           {selectedNumber !== null && !lockedNumbers.includes(selectedNumber) && (
             <button
+              id="lock-btn"
               onClick={handleLockClick}
-              className="px-8 py-3 bg-neutral-800 text-white rounded-full font-medium shadow-lg hover:bg-neutral-900 transition"
+              className="px-8 py-3 bg-neutral-800 text-white rounded-full font-medium shadow-lg hover:bg-neutral-900 transition cursor-pointer"
             >
               Lock
             </button>
           )}
           {lockedNumbers.length > 0 && (
             <button
-               onClick={handleReset}
-              className="px-8 py-3 bg-red-600 text-white rounded-full font-medium shadow-lg hover:bg-red-700 transition"
+              id="reset-btn"
+              onClick={handleReset}
+              className="px-8 py-3 bg-red-600 text-white rounded-full font-medium shadow-lg hover:bg-red-700 transition cursor-pointer"
             >
               Reset progress / Scores
             </button>
           )}
         </div>
+
+        {/* Scoreboard Modal Overlays */}
         {showScoreboard && (
           <div className="fixed inset-0 bg-neutral-900/50 flex items-center justify-center p-4 z-50">
             <div className="bg-white p-6 rounded-2xl shadow-xl max-w-sm w-full">
@@ -761,86 +768,90 @@ export default function App() {
             </div>
           </div>
         )}
+
+        {/* Rules Modal Overlay */}
         {showRules && (
-          <div className="fixed inset-0 bg-neutral-900/55 flex items-center justify-center p-4 z-[100] backdrop-blur-xs">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full border border-neutral-100 flex flex-col max-h-[90vh]">
-              {/* Rules Header */}
-              <div className="p-5 border-b border-neutral-100 flex justify-between items-center bg-neutral-50 rounded-t-2xl">
+          <div className="fixed inset-0 bg-white z-[100] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+            {/* Rules Header */}
+            <div className="p-5 border-b border-neutral-100 bg-neutral-50 shadow-xs">
+              <div className="max-w-4xl mx-auto w-full flex justify-between items-center">
                 <div>
-                  <h2 className="text-lg font-bold text-neutral-800 flex items-center gap-2">
-                    <Info size={20} className="text-blue-600" />
+                  <h2 className="text-xl font-bold text-neutral-800 flex items-center gap-2">
+                    <Info size={24} className="text-blue-600" />
                     खेलका नियम र चरणहरू (Detailed Game Rules)
                   </h2>
-                  <p className="text-xs text-neutral-500 mt-0.5">नियमहरू ध्यानपूर्वक पढेर र पालना गरेर खेल खेल्नुहोला।</p>
+                  <p className="text-sm text-neutral-500 mt-0.5">नियमहरू ध्यानपूर्वक पढेर र पालना गरेर खेल खेल्नुहोला।</p>
                 </div>
                 <button 
                   onClick={() => setShowRules(false)}
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-neutral-400 hover:bg-neutral-200 hover:text-neutral-700 text-lg transition"
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-neutral-400 hover:bg-neutral-200 hover:text-neutral-700 text-2xl transition"
                 >
                   &times;
                 </button>
               </div>
+            </div>
 
-              {/* Rules Body Content */}
-              <div className="p-6 overflow-y-auto space-y-6 text-sm text-neutral-700 leading-relaxed">
+            {/* Rules Body Content */}
+            <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-neutral-50/30">
+              <div className="max-w-4xl mx-auto w-full space-y-6 text-sm text-neutral-700 leading-relaxed">
                 {/* 1. Scoring */}
-                <div>
-                  <h3 className="font-bold text-neutral-900 border-b pb-1 mb-2.5 flex items-center gap-2 text-xs uppercase tracking-wider text-blue-700">
+                <div className="bg-white rounded-xl border border-neutral-100 p-6 shadow-sm">
+                  <h3 className="font-bold text-neutral-950 border-b pb-1.5 mb-3 flex items-center gap-2 text-sm uppercase tracking-wider text-blue-700">
                     🏆 १. अंक प्रणाली (Scoring Rules)
                   </h3>
-                  <div className="grid grid-cols-2 gap-3 mb-2">
-                    <div className="bg-green-50/70 p-3 rounded-lg border border-green-100 text-center">
-                      <div className="text-xs text-green-800 font-bold mb-0.5">सहि उत्तर (+५)</div>
-                      <p className="text-[11px] text-green-700/90 leading-tight">प्रत्येक सहि उप-उत्तर दिएमा सहभागीले ५ अंक प्राप्त गर्नेछन्।</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                    <div className="bg-green-50/70 p-4 rounded-lg border border-green-100 text-center">
+                      <div className="text-sm text-green-800 font-bold mb-0.5">सहि उत्तर (+५)</div>
+                      <p className="text-xs text-green-700/90 leading-tight">प्रत्येक सहि उप-उत्तर दिएमा सहभागीले ५ अंक प्राप्त गर्नेछन्।</p>
                     </div>
-                    <div className="bg-red-50/70 p-3 rounded-lg border border-red-100 text-center">
-                      <div className="text-xs text-red-800 font-bold mb-0.5">गलत उत्तर (-०.२)</div>
-                      <p className="text-[11px] text-red-700/90 leading-tight">कुनै पनि गलत उत्तरको प्रयास गर्दा सहभागीको ०.२ अंक काटिनेछ।</p>
+                    <div className="bg-red-50/70 p-4 rounded-lg border border-red-100 text-center">
+                      <div className="text-sm text-red-800 font-bold mb-0.5">गलत उत्तर (-०.२)</div>
+                      <p className="text-xs text-red-700/90 leading-tight">कुनै पनि गलत उत्तरको प्रयास गर्दा सहभागीको ०.२ अंक काटिनेछ।</p>
                     </div>
                   </div>
-                  <ul className="list-disc pl-5 space-y-1.5 text-xs text-neutral-600 mt-2">
+                  <ul className="list-disc pl-5 space-y-2 text-xs md:text-sm text-neutral-600 mt-2">
                     <li><strong>पालो प्रणाली:</strong> सहभागीहरूले पालैपालो प्रश्नको उत्तर दिनेछन्। एउटा नम्बर लक गरेपछि वा स्पिन गरेपछि अर्को सहभागीको पालो आउनेछ।</li>
                     <li><strong>पास गर्ने नियम (Cycle Limit):</strong> कुनै पनि प्रश्न बढीमा १ चक्र (One Complete Cycle) सम्म मात्र पास हुन पाउनेछ। सबै सहभागीले प्रयास गरिसकेपछि वा पास गरेपछि सो प्रश्न सदाका लागि बन्द हुनेछ।</li>
                   </ul>
                 </div>
 
                 {/* 2. Stages Details */}
-                <div>
-                  <h3 className="font-bold text-neutral-900 border-b pb-1 mb-3 flex items-center gap-2 text-xs uppercase tracking-wider text-blue-700">
+                <div className="bg-white rounded-xl border border-neutral-100 p-6 shadow-sm">
+                  <h3 className="font-bold text-neutral-950 border-b pb-1.5 mb-4 flex items-center gap-2 text-sm uppercase tracking-wider text-blue-700">
                     🔄 २. खेलका मुख्य ३ चरणहरू (Three Game Stages)
                   </h3>
                   <div className="space-y-4">
                     {/* Stage 1 */}
-                    <div className="bg-neutral-50 p-3 rounded-xl border border-neutral-100">
+                    <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-100">
                       <div className="flex items-center gap-1.5 mb-1.5">
-                        <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                        <h4 className="text-xs font-bold text-neutral-800">चरण १: नम्बर ग्रिड छनौट (प्रश्न १ देखि १०)</h4>
+                        <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
+                        <h4 className="text-sm font-bold text-neutral-800">चरण १: नम्बर ग्रिड छनौट (प्रश्न १ देखि १०)</h4>
                       </div>
-                      <p className="text-xs text-neutral-600 pl-3.5 leading-normal">
+                      <p className="text-xs md:text-sm text-neutral-600 pl-4 leading-normal">
                         यस चरणमा सहभागिहरूले स्क्रिनमा रहेको नम्बर ग्रिडबाट सिधै आफूले चाहेको नम्बर रोजेर प्रश्नहरू खेल्न पाउनेछन्। कुल १० वटा प्रश्नहरू खेलिएपछि पहिलो चरण स्वतः समाप्त भई दोस्रो चरण सक्रिय हुनेछ।
                       </p>
                     </div>
 
                     {/* Stage 2 */}
-                    <div className="bg-neutral-50 p-3 rounded-xl border border-neutral-100">
+                    <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-100">
                       <div className="flex items-center gap-1.5 mb-1.5">
-                        <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                        <h4 className="text-xs font-bold text-neutral-800">चरण २: स्पिन भाग्यशाली छनौट (प्रश्न ११ देखि २०)</h4>
+                        <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse"></span>
+                        <h4 className="text-sm font-bold text-neutral-800">चरण २: स्पिन भाग्यशाली छनौट (प्रश्न ११ देखि २०)</h4>
                       </div>
-                      <p className="text-xs text-neutral-600 pl-3.5 leading-normal">
-                        दोस्रो चरण सुरु भएपछि ग्रिड लक हुनेछ। सहभागिहरूले सिधै नम्बर छनोट गर्न पाउने छैनन्। उनीहरूले <strong>'Spin Wheel'</strong> बटन थिचेर भाग्यशाली रूपमा अर्को १० वटा प्रश्नहरू छानी खेल्नुपर्नेछ।
+                      <p className="text-xs md:text-sm text-neutral-600 pl-4 leading-normal">
+                        दोस्रो चरण सुरु भएपछि ग्रिड स्वतः लक हुनेछ। सहभागिहरूले सिधै नम्बर छनोट गर्न पाउने छैनन्। उनीहरूले <strong>'Spin Wheel'</strong> बटन थिचेर भाग्यशाली रूपमा अर्को १० वटा प्रश्नहरू छानी खेल्नुपर्नेछ।
                       </p>
                     </div>
 
                     {/* Stage 3 */}
-                    <div className="bg-neutral-50 p-3 rounded-xl border border-neutral-100">
+                    <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-100">
                       <div className="flex items-center gap-1.5 mb-1.5">
-                        <span className="w-2 h-2 rounded-full bg-purple-500"></span>
-                        <h4 className="text-xs font-bold text-neutral-800">चरण ३: र्‍यापिड राउन्ड (Rapid Mode - बाँकी प्रश्नहरू)</h4>
+                        <span className="w-2.5 h-2.5 rounded-full bg-purple-500 animate-pulse"></span>
+                        <h4 className="text-sm font-bold text-neutral-800">चरण ३: र्‍यापिड राउन्ड (Rapid Mode - बाँकी प्रश्नहरू)</h4>
                       </div>
-                      <p className="text-xs text-neutral-600 pl-3.5 leading-normal">
+                      <p className="text-xs md:text-sm text-neutral-600 pl-4 leading-normal">
                         कुल २० वटा प्रश्न समाप्त भएपछि तेस्रो चरण सुरु हुनेछ। बाँकी सबै प्रश्नहरू र्‍यापिड समय सीमा भित्र स्वतः खेलिनेछन्:
-                        <span className="block mt-1 bg-white p-2 rounded border border-neutral-200/60 font-mono text-[11px] leading-relaxed text-purple-800">
+                        <span className="block mt-2 bg-white p-3 rounded-lg border border-neutral-200/60 font-mono text-xs leading-relaxed text-purple-800">
                           ⏱️ हरेक नयाँ उप-प्रश्नको समय ६० सेकेन्ड रहनेछ। <br/>
                           ⏱️ समय सकिएमा वा गलत उत्तर दिएमा, पालो सर्दा सुरुवाती समयबाट १० सेकेन्ड कट्टा हुनेछ (५०, ४०, ३० सेकेन्ड हुँदै...) <br/>
                           ⏱️ समय सीमा ० सेकेन्ड वा त्यो भन्दा कम भएमा प्रश्नको पालो रद्द हुनेछ।
@@ -850,12 +861,14 @@ export default function App() {
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Rules Footer */}
-              <div className="p-4 border-t border-neutral-100 bg-neutral-50/50 flex justify-end">
+            {/* Rules Footer */}
+            <div className="p-4 border-t border-neutral-100 bg-neutral-50/50">
+              <div className="max-w-4xl mx-auto w-full flex justify-end">
                 <button 
                   onClick={() => setShowRules(false)}
-                  className="px-5 py-2 bg-neutral-900 text-white rounded-lg text-xs font-semibold hover:bg-neutral-800 transition"
+                  className="px-6 py-2.5 bg-neutral-900 text-white rounded-lg text-sm font-semibold hover:bg-neutral-800 transition shadow-sm"
                 >
                   नियमहरू बुझें (Understood)
                 </button>

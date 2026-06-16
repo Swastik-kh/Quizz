@@ -14,7 +14,7 @@ export function SpinWheel({ isOpen, onClose, lockedNumbers, onNumberSelected }: 
   const [isSpinning, setIsSpinning] = useState(false);
   const controls = useAnimation();
 
-  const handleSpin = async () => {
+  const handleSpin = async (isRapid = false) => {
     if (isSpinning) return;
     
     const availableNumbers = Array.from({ length: 30 }, (_, i) => i + 1).filter(
@@ -32,9 +32,6 @@ export function SpinWheel({ isOpen, onClose, lockedNumbers, onNumberSelected }: 
     const winner = availableNumbers[Math.floor(Math.random() * availableNumbers.length)];
     
     // Each number is 360/30 = 12 degrees.
-    // The pointer is at the top (0 degrees).
-    // To align number `winner` (at starting position `(winner-1) * 12`)
-    // with the pointer at 0 degrees, we need to rotate by `-(winner-1) * 12`.
     const rotation = -(winner - 1) * 12;
 
     // Animate spinning: extra spins + target rotation
@@ -45,6 +42,11 @@ export function SpinWheel({ isOpen, onClose, lockedNumbers, onNumberSelected }: 
 
     setSelectedNumber(winner);
     setIsSpinning(false);
+    
+    if (isRapid) {
+        onNumberSelected(winner, true);
+        onClose();
+    }
   };
 
   if (!isOpen) return null;
@@ -94,7 +96,7 @@ export function SpinWheel({ isOpen, onClose, lockedNumbers, onNumberSelected }: 
               ))}
             </motion.div>
             
-            {/* Central display (outside motion.div so it doesn't rotate) */}
+            {/* Central display */}
             {!isSpinning && selectedNumber && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div className="bg-white/90 rounded-full w-20 h-20 flex items-center justify-center text-4xl font-extrabold text-neutral-800 shadow-lg">
@@ -115,15 +117,26 @@ export function SpinWheel({ isOpen, onClose, lockedNumbers, onNumberSelected }: 
               प्रश्न खोल्नुहोस्
             </button>
           ) : (
-            <button
-              onClick={handleSpin}
-              disabled={isSpinning}
-              className={`px-8 py-3 rounded-full text-white font-semibold transition ${
-                isSpinning ? 'bg-neutral-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
-              }`}
-            >
-              {isSpinning ? 'Spinning...' : 'Spin!'}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleSpin(false)}
+                disabled={isSpinning}
+                className={`px-6 py-3 rounded-full text-white font-semibold transition ${
+                  isSpinning ? 'bg-neutral-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
+                }`}
+              >
+                {isSpinning ? 'Spinning...' : 'Spin!'}
+              </button>
+              <button
+                onClick={() => handleSpin(true)}
+                disabled={isSpinning}
+                className={`px-6 py-3 rounded-full text-white font-semibold transition ${
+                  isSpinning ? 'bg-neutral-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'
+                }`}
+              >
+                {isSpinning ? 'Spinning...' : 'Rapid Round!'}
+              </button>
+            </div>
           )}
         </div>
       </motion.div>

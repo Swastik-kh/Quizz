@@ -21,11 +21,48 @@ export default function App() {
   const [viewingQuestionId, setViewingQuestionId] = useState<number | null>(null);
   const [showAnswer, setShowAnswer] = useState(false);
   const [userSelections, setUserSelections] = useState<{ [qIndex: number]: number }>({});
+  const [rapidRound, setRapidRound] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(60);
+
+  // Timer logic
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (rapidRound && timeLeft > 0 && viewingQuestionId !== null) {
+      timer = setTimeout(() => {
+        setTimeLeft(prev => prev - 1);
+        // Play tick sound
+        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        oscillator.type = 'square';
+        oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.1);
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.1);
+      }, 1000);
+    } else if (rapidRound && timeLeft === 0 && viewingQuestionId !== null) {
+      // Time up: buzzer
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      oscillator.type = 'sawtooth';
+      oscillator.frequency.setValueAtTime(220, audioCtx.currentTime);
+      oscillator.connect(audioCtx.destination);
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 2);
+      alert("समय सकियो!");
+      setRapidRound(false);
+    }
+    return () => clearTimeout(timer);
+  }, [rapidRound, timeLeft, viewingQuestionId]);
 
   useEffect(() => {
     setUserSelections({});
     setShowAnswer(false);
-  }, [viewingQuestionId]);
+    if (!rapidRound) setTimeLeft(60);
+  }, [viewingQuestionId, rapidRound]);
 
   const questions = { ...defaultQuestions, ...customQuestions };
 
@@ -93,8 +130,13 @@ export default function App() {
             </button>
           </div>
 
-          <h2 className="text-xl font-medium mb-3 text-neutral-800">
+          <h2 className="text-xl font-medium mb-3 text-neutral-800 flex justify-between items-center">
             Nº {viewingQuestionId}
+            {rapidRound && (
+                <span className={`font-mono text-2xl ${timeLeft <= 10 ? 'text-red-500 animate-pulse' : 'text-neutral-600'}`}>
+                    {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
+                </span>
+            )}
           </h2>
           {questions[viewingQuestionId] && (
               <>
@@ -178,9 +220,11 @@ export default function App() {
         isOpen={spinWheelOpen}
         onClose={() => setSpinWheelOpen(false)}
         lockedNumbers={lockedNumbers}
-        onNumberSelected={(num) => {
+        onNumberSelected={(num, isRapid) => {
           updateLockedNumbers([...lockedNumbers, num]);
           setViewingQuestionId(num);
+          setRapidRound(isRapid);
+          setTimeLeft(60);
         }}
       />
       <div className="max-w-4xl mx-auto">

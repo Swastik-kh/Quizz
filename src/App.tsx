@@ -333,13 +333,15 @@ export default function App() {
           <div className="flex gap-2 mb-4">
             <button
               onClick={async () => {
+                const nextIdx = (activeParticipantIndex + 1) % participants.length;
                 const docRef = doc(db, 'appState', 'global');
                 await setDoc(docRef, {
                   viewingQuestionId: null,
                   showAnswer: false,
                   userSelections: {},
                   scoredSubQuestions: {},
-                  incorrectAttempts: {}
+                  incorrectAttempts: {},
+                  activeParticipantIndex: nextIdx
                 }, { merge: true });
                 setSelectedNumber(null);
               }}
@@ -366,15 +368,40 @@ export default function App() {
             </button>
           </div>
 
-          <h2 className="text-xl font-medium mb-3 text-neutral-800 flex justify-between items-center">
-            Nº {viewingQuestionId} (Participant {participants[activeParticipantIndex]?.name})
-            <div className="flex gap-2">
-            </div>
-            {rapidRound && (
+          <h2 className="text-xl font-medium mb-3 text-neutral-800 flex flex-wrap items-center justify-between gap-3">
+            <span className="flex items-center gap-2">
+              Nº {viewingQuestionId}
+              <span className="text-xs font-normal text-neutral-400 bg-neutral-100 px-2 py-0.5 rounded-full">
+                {participants[activeParticipantIndex] ? participants[activeParticipantIndex].name : 'Unknown'}
+              </span>
+            </span>
+
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-neutral-500">पालो (Turn):</span>
+                <select
+                  value={activeParticipantIndex}
+                  onChange={async (e) => {
+                    const idx = parseInt(e.target.value, 10);
+                    setActiveParticipantIndex(idx);
+                    await updateActiveParticipantIndex(idx);
+                  }}
+                  className="bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-xs font-bold py-1 px-2.5 rounded-lg border border-neutral-200 focus:ring-2 focus:ring-blue-500 transition cursor-pointer"
+                >
+                  {participants.map((p, idx) => (
+                    <option key={p.id} value={idx}>
+                      {p.name} ({p.score})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {rapidRound && (
                 <span className={`font-mono text-2xl ${timeLeft <= 10 ? 'text-red-500 animate-pulse' : 'text-neutral-600'}`}>
                     {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
                 </span>
-            )}
+              )}
+            </div>
           </h2>
           {questions[viewingQuestionId] && (
               <>
@@ -533,13 +560,12 @@ export default function App() {
 
   const handleLockClick = async () => {
     if (selectedNumber !== null) {
-      const nextIdx = (activeParticipantIndex + 1) % participants.length;
       const docRef = doc(db, 'appState', 'global');
       try {
         await setDoc(docRef, {
           lockedNumbers: [...lockedNumbers, selectedNumber],
           viewingQuestionId: selectedNumber,
-          activeParticipantIndex: nextIdx,
+          activeParticipantIndex: activeParticipantIndex,
           showAnswer: false,
           userSelections: {},
           scoredSubQuestions: {},
@@ -565,14 +591,13 @@ export default function App() {
         onClose={() => setSpinWheelOpen(false)}
         lockedNumbers={lockedNumbers}
         onNumberSelected={async (num, isRapid) => {
-          const nextIdx = (activeParticipantIndex + 1) % participants.length;
           const shouldBeRapid = !!isRapid || lockedNumbers.length >= 20;
           const docRef = doc(db, 'appState', 'global');
           try {
             await setDoc(docRef, {
               lockedNumbers: [...lockedNumbers, num],
               viewingQuestionId: num,
-              activeParticipantIndex: nextIdx,
+              activeParticipantIndex: activeParticipantIndex,
               rapidRound: shouldBeRapid,
               showAnswer: false,
               userSelections: {},
@@ -683,6 +708,41 @@ export default function App() {
           )}
         </div>
 
+        {/* Active Turn Selector Card */}
+        <div className="p-3 bg-white rounded-xl shadow-xs border border-neutral-200 max-w-2xl mx-auto transition-all">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5 text-neutral-700">
+              <span className="flex items-center justify-center w-5 h-5 bg-blue-50 text-blue-600 rounded-full animate-pulse">
+                <Check size={12} className="stroke-[3]" />
+              </span>
+              <span className="text-xs font-bold tracking-wide uppercase text-neutral-800">सहभागीको पालो (Choose Turn)</span>
+            </div>
+            
+            <div className="flex flex-wrap gap-1.5 justify-center">
+              {participants.map((p, idx) => {
+                const isActive = idx === activeParticipantIndex;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={async () => {
+                      setActiveParticipantIndex(idx);
+                      await updateActiveParticipantIndex(idx);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs border ${
+                      isActive
+                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-500 scale-[1.03] shadow-md ring-2 ring-blue-500/20'
+                        : 'bg-white hover:bg-neutral-50 text-neutral-600 border-neutral-200'
+                    }`}
+                  >
+                    {isActive && <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />}
+                    <span>{p.name} ({p.score})</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
         {/* Title and Numbers Grid */}
         <h1 className="text-3xl font-light text-neutral-700 mb-10 text-center tracking-tight pt-4">
           कुनै एउटा नम्बर छान्नुहोस्
@@ -737,27 +797,49 @@ export default function App() {
               <div className="space-y-4">
                 {[...participants]
                   .sort((a, b) => b.score - a.score)
-                  .map((p) => (
-                    <div key={p.id} className="flex justify-between items-center p-3 border rounded">
-                       <input 
-                          value={p.name}
-                          onChange={(e) => {
-                            const updated = participants.map((part) => part.id === p.id ? {...part, name: e.target.value} : part);
-                            setParticipants(updated);
-                          }}
-                          onBlur={() => updateParticipants(participants)}
-                          className="w-2/3 border-none p-0 focus:ring-0"
-                       />
-                       <div className="flex gap-2 items-center">
-                          <span className="font-bold">{p.score}</span>
-                          <button onClick={() => {
-                            const updated = participants.filter((part) => part.id !== p.id);
-                            setParticipants(updated);
-                            updateParticipants(updated);
-                          }} className="text-red-500 hover:text-red-700">×</button>
-                       </div>
-                    </div>
-                  ))}
+                  .map((p) => {
+                    const originalIndex = participants.findIndex(part => part.id === p.id);
+                    const isActive = originalIndex === activeParticipantIndex;
+                    return (
+                      <div key={p.id} className={`flex justify-between items-center p-3 border rounded-xl transition ${isActive ? 'border-blue-500 bg-blue-50/20' : 'border-neutral-200'}`}>
+                         <div className="flex items-center gap-2 w-2/3">
+                           <button
+                             onClick={async () => {
+                               if (originalIndex !== -1) {
+                                 setActiveParticipantIndex(originalIndex);
+                                 await updateActiveParticipantIndex(originalIndex);
+                               }
+                             }}
+                             className={`w-5 h-5 rounded-full flex items-center justify-center transition border ${
+                               isActive 
+                                 ? 'bg-blue-600 border-blue-600 text-white shadow-sm' 
+                                 : 'hover:bg-neutral-100 border-neutral-300 text-transparent hover:text-neutral-400'
+                             }`}
+                             title={isActive ? "Active Turn" : "Set Active Turn"}
+                           >
+                             <Check size={12} className="stroke-[3]" />
+                           </button>
+                           <input 
+                              value={p.name}
+                              onChange={(e) => {
+                                const updated = participants.map((part) => part.id === p.id ? {...part, name: e.target.value} : part);
+                                setParticipants(updated);
+                              }}
+                              onBlur={() => updateParticipants(participants)}
+                              className="w-full border-none p-0 focus:ring-0 text-xs font-semibold text-neutral-800 bg-transparent"
+                           />
+                         </div>
+                         <div className="flex gap-3 items-center">
+                            <span className="font-bold text-xs text-neutral-700">{p.score}</span>
+                            <button onClick={() => {
+                              const updated = participants.filter((part) => part.id !== p.id);
+                              setParticipants(updated);
+                              updateParticipants(updated);
+                            }} className="text-red-500 hover:text-red-700 text-lg font-bold p-1">×</button>
+                         </div>
+                      </div>
+                    );
+                  })}
                 <button onClick={() => {
                   const updated = [...participants, { id: Date.now().toString(), name: 'New Participant', score: 0 }];
                   setParticipants(updated);

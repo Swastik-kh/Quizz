@@ -50,6 +50,14 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
   throw new Error(JSON.stringify(errInfo));
 }
 
+const nepaliDigits = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९'];
+function toNepaliNumber(num: number): string {
+  return String(num).split('').map(digit => {
+    const parsed = parseInt(digit, 10);
+    return isNaN(parsed) ? digit : nepaliDigits[parsed];
+  }).join('');
+}
+
 export default function App() {
   const [lockedNumbers, setLockedNumbers] = useState<number[]>([]);
   const [customQuestions, setCustomQuestions] = useState<{ [key: number]: CaseData }>({});
@@ -72,6 +80,7 @@ export default function App() {
   const [scoredSubQuestions, setScoredSubQuestions] = useState<Record<number, Record<number, boolean>>>({});
   const [incorrectAttempts, setIncorrectAttempts] = useState<Record<number, Record<number, string[]>>>({});
   const [rapidStartDuration, setRapidStartDuration] = useState(60);
+  const [isManualTurn, setIsManualTurn] = useState<boolean>(false);
 
   // Timer logic
   useEffect(() => {
@@ -114,7 +123,7 @@ export default function App() {
         setRapidStartDuration(nextDuration);
         setTimeLeft(nextDuration);
         setActiveParticipantIndex(nextPIdx);
-        updateActiveParticipantIndex(nextPIdx);
+        updateActiveParticipantIndex(nextPIdx, false);
       }
     }
     return () => clearTimeout(timer);
@@ -187,6 +196,7 @@ export default function App() {
         participants: updatedParticipants,
         incorrectAttempts: updatedIncorrect,
         activeParticipantIndex: nextPIdx,
+        isManualTurn: false,
         rapidRound: shouldBeRapid
       }, { merge: true });
 
@@ -233,6 +243,7 @@ export default function App() {
         setUserSelections(data.userSelections || {});
         setShowAnswer(!!data.showAnswer);
         setRapidRound(!!data.rapidRound);
+        setIsManualTurn(!!data.isManualTurn);
       } else {
         setLockedNumbers([]);
         setCustomQuestions({});
@@ -271,10 +282,10 @@ export default function App() {
     }
   };
 
-  const updateActiveParticipantIndex = async (idx: number) => {
+  const updateActiveParticipantIndex = async (idx: number, isManual: boolean = true) => {
     const docRef = doc(db, 'appState', 'global');
     try {
-      await setDoc(docRef, { activeParticipantIndex: idx }, { merge: true });
+      await setDoc(docRef, { activeParticipantIndex: idx, isManualTurn: isManual }, { merge: true });
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'appState/global');
     }
@@ -291,6 +302,7 @@ export default function App() {
           lockedNumbers: [],
           participants: resetParts,
           activeParticipantIndex: 0,
+          isManualTurn: false,
           viewingQuestionId: null,
           scoredSubQuestions: {},
           incorrectAttempts: {},
@@ -303,6 +315,7 @@ export default function App() {
         setLockedNumbers([]);
         setParticipants(resetParts);
         setActiveParticipantIndex(0);
+        setIsManualTurn(false);
         
         setSelectedNumber(null);
         setViewingQuestionId(null);
@@ -333,15 +346,13 @@ export default function App() {
           <div className="flex gap-2 mb-4">
             <button
               onClick={async () => {
-                const nextIdx = (activeParticipantIndex + 1) % participants.length;
                 const docRef = doc(db, 'appState', 'global');
                 await setDoc(docRef, {
                   viewingQuestionId: null,
                   showAnswer: false,
                   userSelections: {},
                   scoredSubQuestions: {},
-                  incorrectAttempts: {},
-                  activeParticipantIndex: nextIdx
+                  incorrectAttempts: {}
                 }, { merge: true });
                 setSelectedNumber(null);
               }}
@@ -561,11 +572,15 @@ export default function App() {
   const handleLockClick = async () => {
     if (selectedNumber !== null) {
       const docRef = doc(db, 'appState', 'global');
+      const finalActiveIndex = isManualTurn
+        ? activeParticipantIndex
+        : (activeParticipantIndex + 1) % participants.length;
       try {
         await setDoc(docRef, {
           lockedNumbers: [...lockedNumbers, selectedNumber],
           viewingQuestionId: selectedNumber,
-          activeParticipantIndex: activeParticipantIndex,
+          activeParticipantIndex: finalActiveIndex,
+          isManualTurn: false,
           showAnswer: false,
           userSelections: {},
           scoredSubQuestions: {},
@@ -593,11 +608,15 @@ export default function App() {
         onNumberSelected={async (num, isRapid) => {
           const shouldBeRapid = !!isRapid || lockedNumbers.length >= 20;
           const docRef = doc(db, 'appState', 'global');
+          const finalActiveIndex = isManualTurn
+            ? activeParticipantIndex
+            : (activeParticipantIndex + 1) % participants.length;
           try {
             await setDoc(docRef, {
               lockedNumbers: [...lockedNumbers, num],
               viewingQuestionId: num,
-              activeParticipantIndex: activeParticipantIndex,
+              activeParticipantIndex: finalActiveIndex,
+              isManualTurn: false,
               rapidRound: shouldBeRapid,
               showAnswer: false,
               userSelections: {},
@@ -676,7 +695,7 @@ export default function App() {
                 सिधै ग्रिडबाट आफ्नो इच्छा अनुसार नम्बर रोजेर प्रश्न खेल्नुहोस्।
               </div>
               <div className="text-[10px] text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded-full font-mono font-bold">
-                प्रश्न: {lockedNumbers.length}/१०
+                प्रश्न: {toNepaliNumber(lockedNumbers.length)}/१०
               </div>
             </div>
           ) : lockedNumbers.length < 20 ? (
@@ -689,7 +708,7 @@ export default function App() {
                 स्पिन बटन थिची भाग्यशाली नम्बर मार्फत प्रश्न खेल्नुहोस्।
               </div>
               <div className="text-[10px] text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded-full font-mono font-bold">
-                प्रश्न: {lockedNumbers.length}/१०+
+                प्रश्न: {toNepaliNumber(lockedNumbers.length)}/१०+
               </div>
             </div>
           ) : (
@@ -702,7 +721,7 @@ export default function App() {
                 द्रुत राउन्डको समय सीमा भित्र प्रश्नको उत्तर दिनुहोस्।
               </div>
               <div className="text-[10px] text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded-full font-mono font-bold">
-                प्रश्न: {lockedNumbers.length - 20}/१०+
+                प्रश्न: {toNepaliNumber(lockedNumbers.length - 20)}/१०+
               </div>
             </div>
           )}
